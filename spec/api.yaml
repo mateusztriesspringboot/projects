@@ -1,0 +1,290 @@
+openapi: 3.0.3
+info:
+  title: Projects app
+  description: A simple API to manage users and their projects. assignment
+  version: 1.0
+paths:
+  /users:
+    post:
+      operationId: CreateUser
+      summary: Create new User.
+      description: Create new user by providing email, password and optional name.
+      requestBody:
+        description: User creation details.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserDetails"
+      responses:
+        200:
+          description: Created user details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        400:
+          $ref: "#/components/responses/400"
+        409:
+          $ref: "#/components/responses/409"
+        500:
+          $ref: "#/components/responses/500"
+        default:
+          $ref: "#/components/responses/default"
+
+  /users/{userId}:
+    get:
+      operationId: GetUser
+      summary: Get user by Id.
+      description: Gets user details by user identifier.
+      parameters:
+        - $ref: "#/components/parameters/UserIdPathParam"
+      responses:
+        200:
+          description: User details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        404:
+          $ref: "#/components/responses/404"
+        500:
+          $ref: "#/components/responses/500"
+        default:
+          $ref: "#/components/responses/default"
+
+    delete:
+      operationId: DeleteUser
+      summary: Delete user.
+      description: Deletes user with given identifier.
+      parameters:
+        - $ref: "#/components/parameters/UserIdPathParam"
+      responses:
+        204:
+          description: User deleted successfully.
+        404:
+          $ref: "#/components/responses/404"
+        500:
+          $ref: "#/components/responses/500"
+        default:
+          $ref: "#/components/responses/default"
+
+  /users/{userId}/projects:
+    get:
+      operationId: ListUserProjects
+      summary: List user projects.
+      description: Lists projects for a given user.
+      parameters:
+        - $ref: "#/components/parameters/UserIdPathParam"
+      responses:
+        200:
+          description: List of user projects.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectCollection"
+        404:
+          $ref: "#/components/responses/404"
+        500:
+          $ref: "#/components/responses/500"
+        default:
+          $ref: "#/components/responses/default"
+
+    post:
+      operationId: CreateProject
+      summary: Create new project for a user.
+      description: Create new project for a user by providing project name.
+      parameters:
+        - $ref: "#/components/parameters/UserIdPathParam"
+      requestBody:
+        description: Project creation details.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProjectDetails"
+      responses:
+        200:
+          description: Created project details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        400:
+          $ref: "#/components/responses/400"
+        409:
+          $ref: "#/components/responses/409"
+        500:
+          $ref: "#/components/responses/500"
+        default:
+          $ref: "#/components/responses/default"
+
+components:
+  parameters:
+    UserIdPathParam:
+      name: userId
+      in: path
+      required: true
+      description: Id of the user.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 255
+
+  responses:
+    400:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    401:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    404:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    409:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    429:
+      description: Too Many Requests
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    500:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    default:
+      description: Unknown Error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    User:
+      type: object
+      description: User details.
+      required:
+        - userId
+        - email
+      properties:
+        userId:
+          description: Unique identifier of the user.
+          type: string
+          minLength: 1
+          maxLength: 255
+        email:
+          description: Email address of the user.
+          type: string
+          format: email
+          minLength: 3
+          maxLength: 254
+        name:
+          description: Name of the user.
+          type: string
+          minLength: 1
+          maxLength: 120
+
+    CreateUserDetails:
+      type: object
+      description: User creation details.
+      required:
+        - email
+        - password
+      properties:
+        email:
+          description: Email address of the user.
+          type: string
+          format: email
+          minLength: 3
+          maxLength: 254
+        password:
+          description: Password of the user.
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 120
+        name:
+          description: Name of the user.
+          type: string
+          minLength: 1
+          maxLength: 120
+
+    Project:
+      type: object
+      description: Project details.
+      required:
+        - projectId
+        - name
+      properties:
+        projectId:
+          description: Unique identifier of the project.
+          type: string
+          minLength: 1
+          maxLength: 255
+        name:
+          description:  Name of the project.
+          type: string
+          minLength: 1
+          maxLength: 120
+
+    CreateProjectDetails:
+      type: object
+      description: Project creation details.
+      required:
+        - name
+      properties:
+        name:
+          description: Name of the project.
+          type: string
+          minLength: 1
+          maxLength: 120
+
+    ProjectCollection:
+      type: object
+      description: List of user projects.
+      required:
+        - items
+      properties:
+        items:
+          description: List of user projects.
+          type: array
+          items:
+            $ref: "#/components/schemas/Project"
+
+    Error:
+      description: Error information
+      required:
+        - code
+        - message
+      properties:
+        timestamp:
+          description: Timestamp of the error occurrence.
+          type: string
+        status:
+          description: A short code that defines the error meaning for programmatic parsing.
+          type: integer
+        error:
+          description: A short error name.
+          type: string
+        message:
+          description: A human-readable error message.
+          type: string
+        path:
+          description: Uri path of the request.
+          type: string

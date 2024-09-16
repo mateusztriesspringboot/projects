@@ -1,0 +1,46 @@
+services:
+  projects:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      MYSQL_URL: jdbc:mysql://mysql:3306/projects
+      MYSQL_USER: projects_user
+      KEYSTORE_PATH: /run/secrets/keystore
+      PROFILE: preprod
+      PORT: 8080
+      ADMIN_PORT: 8081
+    secrets:
+      - projects_user_password
+      - keystore
+      - keystore_password
+    entrypoint: [ '/bin/sh', '-c', 'export MYSQL_PASSWORD=$(cat /run/secrets/projects_user_password) ; export KEYSTORE_PASSWORD=$(cat /run/secrets/keystore_password); java -jar -Dspring.profiles.active=$${PROFILE:default} /app/projects.jar' ]
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/projects_root_password
+      MYSQL_DATABASE: projects
+      MYSQL_USER: projects_user
+      MYSQL_PASSWORD_FILE: /run/secrets/projects_user_password
+    secrets:
+      - projects_root_password
+      - projects_user_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 5
+
+
+secrets:
+  projects_root_password:
+    file: projects_root_password.txt
+  projects_user_password:
+    file: projects_user_password.txt
+  keystore:
+    file: keystore.jks
+  keystore_password:
+    file: keytool_password.txt
